@@ -113,15 +113,14 @@ public class JTextList extends JTextPane
     private void refreshList() throws BadLocationException
     {
         doc.remove(0, doc.getLength());
-        setText("");
-        /*if (check.size() - 1 != list.size())
+        if (check.size() - 1 != list.size())
             check.clear();
         if (text.size() != list.size())
         {
             for (JTextArea a : text)
                 a.removeFocusListener(listener);
             text.clear();
-        }*/
+        }
 
         for (int i = 0; i < list.size() + 1; i++)
         {
