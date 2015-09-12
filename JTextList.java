@@ -1,5 +1,6 @@
 import javax.swing.*;
-import javax.swing.text.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -24,18 +25,7 @@ public class JTextList extends JTextPane
         doc = this.getStyledDocument();
         check = new ArrayList<>();
         text = new ArrayList<>();
-        if (list != null)
-        {
-            this.list = list;
-            try
-            {
-                refreshList();
-            }
-            catch (BadLocationException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        listener = new Listener();
     }
 
     public int length()
