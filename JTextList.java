@@ -131,10 +131,11 @@ public class JTextList extends JTextPane
                 if (text.size() != list.size())
                 {
                     text.add(new JTextArea());
-                    text.get(i - 1).setCaret(new customCaret());
+                    text.get(i - 1).setCaret(new CustomCaret());
                     text.get(i - 1).addFocusListener(listener);
                     text.get(i - 1).setAlignmentY(0.78f);
                     text.get(i - 1).setEditable(false);
+                    text.get(i - 1).getDropTarget().setActive(false);
                 }
                 insertComponent(text.get(i - 1));
                 text.get(i - 1).setText(list.get(i - 1));
@@ -153,7 +154,7 @@ public class JTextList extends JTextPane
         }
         catch (BadLocationException e)
         {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(getParent(), e.toString());
         }
     }
 
@@ -169,8 +170,8 @@ public class JTextList extends JTextPane
 
                 if (temp.equals(a))
                     continue;
-                customCaret caret = (customCaret) a.getCaret();
-                caret.deselect(false);
+                CustomCaret caret = (CustomCaret) a.getCaret();
+                caret.deselect();
 
             }
         }

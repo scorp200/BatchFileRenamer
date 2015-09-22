@@ -1,4 +1,7 @@
 import javax.swing.*;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -9,11 +12,12 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by DogeWolf on 9/8/2015.
  */
-public class batchRename extends JFrame
+public class BatchRename extends JFrame
 {
     public static void main(String[] args)
     {
@@ -24,7 +28,7 @@ public class batchRename extends JFrame
         catch (Exception e)
         {
         }
-        JFrame frame = new batchRename();
+        JFrame frame = new BatchRename();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter()
         {
@@ -56,13 +60,15 @@ public class batchRename extends JFrame
     private int version = -1;
 
     private Listener listener = new Listener();
-    private String path;
+    private String path = "";
     private String ext;
 
-    public batchRename()
+    private DropTarget target;
+    private FileDropTargetListener dropTargetListener;
+
+    public BatchRename()
     {
         setLayout(null);
-
         replace = new JButton("replace");
         replace.setSize(85, 33);
         replace.setLocation(172, 2);
@@ -115,6 +121,8 @@ public class batchRename extends JFrame
         fileList.setSize(690, 276);
         fileList.setLocation(2, 35);
 
+        dropTargetListener = new FileDropTargetListener();
+        target = new DropTarget(fileList, dropTargetListener);
 
         JScrollPane fileScroll = new JScrollPane(fileList);
         fileScroll.setSize(fileList.getSize());
@@ -220,7 +228,7 @@ public class batchRename extends JFrame
         {
             if (e.getActionCommand().equals("open"))
             {
-                JFileChooser fileChooser = new JFileChooser("M:\\Documents\\Java\\BatchRename");
+                JFileChooser fileChooser = new JFileChooser(path);
                 fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 fileChooser.showOpenDialog(getParent());
                 if (fileChooser.getSelectedFile() == null)
@@ -283,7 +291,7 @@ public class batchRename extends JFrame
                     }
                     catch (IOException e1)
                     {
-                        e1.printStackTrace();
+                        JOptionPane.showMessageDialog(getParent(), e1.getMessage());
                     }
                 }
             }
@@ -296,4 +304,90 @@ public class batchRename extends JFrame
             }
         }
     }
+
+    class FileDropTargetListener implements DropTargetListener
+    {
+        @Override
+        public void dragEnter(DropTargetDragEvent event)
+        {
+            Transferable transferable = event.getTransferable();
+            File files;
+            try
+            {
+                List list = (List) transferable.getTransferData(transferable.getTransferDataFlavors()[0]);
+                if (list.size() > 1)
+                {
+                    event.rejectDrag();
+                    return;
+                }
+                files = new File(list.get(0).toString());
+                if (files.isDirectory())
+                {
+                    event.acceptDrag(DnDConstants.ACTION_COPY);
+                }
+                else
+                    event.rejectDrag();
+            }
+            catch (UnsupportedFlavorException e)
+            {
+                JOptionPane.showMessageDialog(getParent(), e.toString());
+            }
+            catch (IOException e)
+            {
+                JOptionPane.showMessageDialog(getParent(), e.toString());
+            }
+
+
+        }
+
+        @Override
+        public void dragOver(DropTargetDragEvent event)
+        {
+
+        }
+
+        @Override
+        public void dropActionChanged(DropTargetDragEvent event)
+        {
+
+        }
+
+        @Override
+        public void dragExit(DropTargetEvent event)
+        {
+
+        }
+
+        @Override
+        public void drop(DropTargetDropEvent event)
+        {
+            event.acceptDrop(DnDConstants.ACTION_COPY);
+            ;
+            Transferable transferable = event.getTransferable();
+            try
+            {
+                List list = (List) transferable.getTransferData(transferable.getTransferDataFlavors()[0]);
+                path = list.get(0).toString();
+                try
+                {
+                    loadFiles(new File(list.get(0).toString()).listFiles());
+                }
+                catch (Exception e)
+                {
+                    JOptionPane.showMessageDialog(getParent(), e.toString());
+                }
+            }
+            catch (UnsupportedFlavorException e)
+            {
+                JOptionPane.showMessageDialog(getParent(), e.toString());
+            }
+            catch (IOException e)
+            {
+                JOptionPane.showMessageDialog(getParent(), e.toString());
+            }
+            event.dropComplete(true);
+        }
+    }
+
+
 }
