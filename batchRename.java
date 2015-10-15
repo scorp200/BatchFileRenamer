@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.text.StyleConstants;
+import java.awt.*;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
@@ -19,6 +21,9 @@ import java.util.List;
  */
 public class BatchRename extends JFrame
 {
+    private static final int WIDTH = 700;
+    private static final int HEIGHT = 340;
+
     public static void main(String[] args)
     {
         try
@@ -39,7 +44,7 @@ public class BatchRename extends JFrame
         });
         frame.setTitle("Batch File Rename");
         frame.setVisible(true);
-        frame.setSize(700, 340);
+        frame.setSize(WIDTH, HEIGHT);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
     }
@@ -65,6 +70,8 @@ public class BatchRename extends JFrame
 
     private DropTarget target;
     private FileDropTargetListener dropTargetListener;
+
+    private JLabel message;
 
     public BatchRename()
     {
@@ -108,6 +115,7 @@ public class BatchRename extends JFrame
         open.setLocation(434, 2);
         open.addActionListener(listener);
 
+
         add(prefix);
         add(suffix);
         add(ignore);
@@ -120,14 +128,25 @@ public class BatchRename extends JFrame
         fileList = new JTextList(null, false);
         fileList.setSize(690, 276);
         fileList.setLocation(2, 35);
+        fileList.getDropTarget().setActive(false);
 
-        dropTargetListener = new FileDropTargetListener();
-        target = new DropTarget(fileList, dropTargetListener);
+        message = new JLabel("Drag and Drop a folder here");
+        message.setForeground(Color.GRAY);
+        message.setFont(new Font(null, Font.PLAIN, 20));
 
         JScrollPane fileScroll = new JScrollPane(fileList);
         fileScroll.setSize(fileList.getSize());
         fileScroll.setLocation(fileList.getLocation());
         add(fileScroll);
+
+        fileList.setTextAlignment(StyleConstants.ALIGN_CENTER);
+        fileList.setText("\n\n\n\n\n");
+        fileList.setCaretPosition(fileList.getStyledDocument().getLength() - 1);
+        fileList.insertComponent(message);
+        fileList.setTextAlignment(StyleConstants.ALIGN_CENTER);
+
+        dropTargetListener = new FileDropTargetListener();
+        target = new DropTarget(fileScroll, dropTargetListener);
     }
 
     private ArrayList<String> filesToString(File[] files)
@@ -361,6 +380,7 @@ public class BatchRename extends JFrame
         @Override
         public void drop(DropTargetDropEvent event)
         {
+            fileList.setTextAlignment(StyleConstants.ALIGN_LEFT);
             event.acceptDrop(DnDConstants.ACTION_COPY);
             ;
             Transferable transferable = event.getTransferable();

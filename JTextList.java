@@ -1,5 +1,7 @@
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.FocusEvent;
@@ -156,6 +158,13 @@ public class JTextList extends JTextPane
         {
             JOptionPane.showMessageDialog(getParent(), e.toString());
         }
+    }
+
+    public void setTextAlignment(int alignment)
+    {
+        SimpleAttributeSet set = new SimpleAttributeSet();
+        StyleConstants.setAlignment(set, alignment);
+        doc.setParagraphAttributes(0, doc.getLength(), set, false);
     }
 
     class Listener implements FocusListener
