@@ -66,7 +66,7 @@ public class BatchRename extends JFrame
 
     private Listener listener = new Listener();
     private String path = "";
-    private String ext;
+    private String[] ext;
 
     private DropTarget target;
     private FileDropTargetListener dropTargetListener;
@@ -147,6 +147,7 @@ public class BatchRename extends JFrame
 
         dropTargetListener = new FileDropTargetListener();
         target = new DropTarget(fileScroll, dropTargetListener);
+
     }
 
     private ArrayList<String> filesToString(File[] files)
@@ -176,6 +177,13 @@ public class BatchRename extends JFrame
         ignore.setSelected(false);
         replaceAll.setSelected(false);
         version = 0;
+
+        ext = new String[files.length];
+        for (int i = 0; i < ext.length; i++)
+        {
+            String temp = fileNames.get(version).get(i);
+            ext[i] = temp.substring(temp.lastIndexOf("."), temp.length());
+        }
     }
 
     private ArrayList<String> processReplace(ArrayList<String> names, String replace, String with, int selectionStart, int selectionEnd, boolean replaceAll, boolean ignoreSelection)
@@ -215,7 +223,10 @@ public class BatchRename extends JFrame
             Path oldName = FileSystems.getDefault().getPath(f.getAbsolutePath());
             Files.move(oldName, oldName.resolveSibling("temp" + i));
             oldName = FileSystems.getDefault().getPath(path + "\\" + "temp" + i);
-            Files.move(oldName, oldName.resolveSibling(names.get(i) + ext));
+            if (ignore.isSelected())
+                Files.move(oldName, oldName.resolveSibling(names.get(i) + ext[i]));
+            else
+                Files.move(oldName, oldName.resolveSibling(names.get(i)));
         }
         loadFiles(new File(path).listFiles());
         JOptionPane.showMessageDialog(this, "Your files were renamed");
@@ -223,22 +234,16 @@ public class BatchRename extends JFrame
 
     private void removeExtension()
     {
-        if (ignore.isSelected())
+
+        for (int i = 0; i < fileNames.get(version).size(); i++)
         {
-            String temp = fileNames.get(version).get(0);
-            ext = temp.substring(temp.lastIndexOf("."), temp.length());
-            fileNames.add(processReplace(fileNames.remove(fileNames.size() - 1), ext, "", -1, -1, false, true));
-            version = fileNames.size() - 1;
-            fileList.newList(fileNames.get(version));
+            String temp = fileNames.get(version).get(i);
+            if (ignore.isSelected())
+                fileNames.get(version).set(i, temp.substring(0, temp.lastIndexOf(".")));
+            else if (!ignore.isSelected())
+                fileNames.get(version).set(i, temp + ext[i]);
         }
-        else if (!ignore.isSelected())
-        {
-            String temp = fileNames.get(version).get(0);
-            fileNames.add(processReplace(fileNames.remove(fileNames.size() - 1), "", ext, -1, -1, false, true));
-            version = fileNames.size() - 1;
-            fileList.newList(fileNames.get(version));
-            ext = "";
-        }
+        fileList.newList(fileNames.get(version));
     }
 
     class Listener implements ActionListener

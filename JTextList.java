@@ -138,6 +138,7 @@ public class JTextList extends JTextPane
                     text.get(i - 1).setAlignmentY(0.78f);
                     text.get(i - 1).setEditable(false);
                     text.get(i - 1).getDropTarget().setActive(false);
+                   // text.get(i-1).setForeground(Color.RED);
                 }
                 insertComponent(text.get(i - 1));
                 text.get(i - 1).setText(list.get(i - 1));
