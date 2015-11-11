@@ -182,11 +182,15 @@ public class BatchRename extends JFrame
         for (int i = 0; i < ext.length; i++)
         {
             String temp = fileNames.get(version).get(i);
-            ext[i] = temp.substring(temp.lastIndexOf("."), temp.length());
+            int index = temp.lastIndexOf(".");
+            if (index >= 0)
+                ext[i] = temp.substring(index, temp.length());
+            else
+                ext[i] = "";
         }
     }
 
-    private ArrayList<String> processReplace(ArrayList<String> names, String replace, String with, int selectionStart, int selectionEnd, boolean replaceAll, boolean ignoreSelection)
+    protected ArrayList<String> processReplace(ArrayList<String> names, String replace, String with, int selectionStart, int selectionEnd, boolean replaceAll, boolean ignoreSelection)
     {
         ArrayList<String> newNames = new ArrayList<>();
         String fixed = "";
@@ -237,6 +241,8 @@ public class BatchRename extends JFrame
 
         for (int i = 0; i < fileNames.get(version).size(); i++)
         {
+            if (ext[i].equals(""))
+                continue;
             String temp = fileNames.get(version).get(i);
             if (ignore.isSelected())
                 fileNames.get(version).set(i, temp.substring(0, temp.lastIndexOf(".")));

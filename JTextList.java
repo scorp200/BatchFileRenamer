@@ -1,11 +1,12 @@
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 /**
@@ -18,6 +19,8 @@ public class JTextList extends JTextPane
     private ArrayList<JCheckBox> check;
     private ArrayList<JTextArea> text;
     private Listener listener;
+    private KeyboardListener keyListener;
+    private DocumentFilter documentListen;
 
     public JTextList(ArrayList<String> list, Boolean editable)
     {
@@ -28,6 +31,8 @@ public class JTextList extends JTextPane
         check = new ArrayList<>();
         text = new ArrayList<>();
         listener = new Listener();
+        documentListen = new Documentfilter();
+        keyListener = new KeyboardListener();
     }
 
     public int length()
@@ -138,7 +143,8 @@ public class JTextList extends JTextPane
                     text.get(i - 1).setAlignmentY(0.78f);
                     text.get(i - 1).setEditable(false);
                     text.get(i - 1).getDropTarget().setActive(false);
-                   // text.get(i-1).setForeground(Color.RED);
+                    text.get(i - 1).getDocument().putProperty("filterNewlines", true);
+                    // text.get(i-1).setForeground(Color.RED);
                 }
                 insertComponent(text.get(i - 1));
                 text.get(i - 1).setText(list.get(i - 1));
@@ -168,6 +174,75 @@ public class JTextList extends JTextPane
         doc.setParagraphAttributes(0, doc.getLength(), set, false);
     }
 
+    class Documentfilter extends DocumentFilter
+    {
+        @Override
+        public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
+        {
+
+            String temp;
+            for(JTextArea txt : text)
+            {
+                if(txt.getDocument().equals(fb.getDocument()))
+                    continue;
+                temp = new StringBuilder(txt.getText()).replace(offset,offset+length,"").toString();
+                txt.setText(temp);
+            }
+            super.remove(fb, offset, length);
+        }
+
+        @Override
+        public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException
+        {
+            String temp;
+            for(JTextArea txt : text)
+            {
+                if(txt.getDocument().equals(fb.getDocument()))
+                    continue;
+                temp = new StringBuilder(txt.getText()).insert(offset,string).toString();
+                txt.setText(temp);
+            }
+            System.out.println(fb);
+            super.insertString(fb, offset, string, attr);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String with, AttributeSet attrs) throws BadLocationException
+        {
+            String temp;
+            for(JTextArea txt : text)
+            {
+                if(txt.getDocument().equals(fb.getDocument()))
+                    continue;
+                temp = new StringBuilder(txt.getText()).replace(offset,offset+length,with).toString();
+                txt.setText(temp);
+            }
+            super.replace(fb, offset, length, with, attrs);
+        }
+    }
+
+    class KeyboardListener implements KeyListener
+    {
+
+        @Override
+        public void keyTyped(KeyEvent e)
+        {
+
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e)
+        {
+
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e)
+        {
+
+        }
+    }
+
     class Listener implements FocusListener
     {
 
@@ -175,11 +250,17 @@ public class JTextList extends JTextPane
         public void focusGained(FocusEvent e)
         {
             JTextArea temp = (JTextArea) e.getComponent();
+            temp.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            temp.setEditable(true);
+            temp.getCaret().setVisible(true);
+            ((AbstractDocument) temp.getDocument()).setDocumentFilter(documentListen);
             for (JTextArea a : text)
             {
-
                 if (temp.equals(a))
                     continue;
+                a.setBorder(null);
+                a.setEditable(false);
+                ((AbstractDocument) a.getDocument()).setDocumentFilter(null);
                 CustomCaret caret = (CustomCaret) a.getCaret();
                 caret.deselect();
 
