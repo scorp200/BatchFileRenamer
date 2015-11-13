@@ -1,12 +1,9 @@
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 /**
@@ -19,20 +16,29 @@ public class JTextList extends JTextPane
     private ArrayList<JCheckBox> check;
     private ArrayList<JTextArea> text;
     private Listener listener;
-    private KeyboardListener keyListener;
-    private DocumentFilter documentListen;
+    private DocumentFilter documentFilter;
+    private ArrayList<ArrayList<String>> version;
 
     public JTextList(ArrayList<String> list, Boolean editable)
     {
+        getActionMap().put("undo", new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                System.out.println("test");
+            }
+        });
+        getInputMap().put(KeyStroke.getKeyStroke("control Z"), "undo");
         Font font = new Font(Font.SANS_SERIF, 0, 15);
         setFont(font);
         setEditable(editable);
         doc = this.getStyledDocument();
         check = new ArrayList<>();
         text = new ArrayList<>();
+        version = new ArrayList<>();
         listener = new Listener();
-        documentListen = new Documentfilter();
-        keyListener = new KeyboardListener();
+        documentFilter = new Documentfilter();
     }
 
     public int length()
@@ -40,24 +46,31 @@ public class JTextList extends JTextPane
         return list.size();
     }
 
-    public String getElementAt(int index)
+    public ArrayList<String> getList()
     {
-        return list.get(index);
+        for (int i = 0; i < list.size(); i++)
+        {
+            list.set(i, text.get(i).getText());
+        }
+        return list;
+
     }
 
-    public void add(String element)
+    public void replace(int index, String string, int startPos, int endPos)
     {
-        list.add(element);
+        requestFocus();
+        text.get(index).setText(new StringBuilder(text.get(index).getText()).replace(startPos,endPos,string).toString());
     }
 
-    public void remove(String element)
+    public void setText(int index,String string)
     {
-        list.remove(element);
+        requestFocus();
+        text.get(index).setText(string);
     }
 
-    public String get(int index)
+    public String getText(int index)
     {
-        return list.get(index);
+        return text.get(index).getText();
     }
 
     public JCheckBox getCheckBox(int index)
@@ -115,8 +128,12 @@ public class JTextList extends JTextPane
         if (text.size() != list.size())
         {
             for (JTextArea a : text)
+            {
                 a.removeFocusListener(listener);
+                ((AbstractDocument) a.getDocument()).setDocumentFilter(null);
+            }
             text.clear();
+            version.clear();
         }
 
         for (int i = 0; i < list.size() + 1; i++)
@@ -130,6 +147,8 @@ public class JTextList extends JTextPane
                     check.add(new JCheckBox());
                 check.get(i).setSelected(true);
                 check.get(i).setAlignmentY(0.78f);
+                check.get(i).setBackground(null);
+                check.get(i).setFocusable(false);
             }
             insertComponent(check.get(i));
             //TextAreas
@@ -137,17 +156,21 @@ public class JTextList extends JTextPane
             {
                 if (text.size() != list.size())
                 {
-                    text.add(new JTextArea());
-                    text.get(i - 1).setCaret(new CustomCaret());
-                    text.get(i - 1).addFocusListener(listener);
-                    text.get(i - 1).setAlignmentY(0.78f);
-                    text.get(i - 1).setEditable(false);
-                    text.get(i - 1).getDropTarget().setActive(false);
-                    text.get(i - 1).getDocument().putProperty("filterNewlines", true);
-                    // text.get(i-1).setForeground(Color.RED);
+                    JTextArea temp = new JTextArea();
+                    text.add(temp);
+                    version.add(new ArrayList<>());
+                    temp.setCaret(new CustomCaret());
+                    temp.addFocusListener(listener);
+                    temp.setAlignmentY(0.78f);
+                    temp.setEditable(false);
+                    temp.getDropTarget().setActive(false);
+                    temp.getDocument().putProperty("filterNewlines", true);
+                    temp.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                    temp.setBorder(null);
                 }
                 insertComponent(text.get(i - 1));
                 text.get(i - 1).setText(list.get(i - 1));
+                version.get(i - 1).clear();
             }
             doc.insertString(doc.getLength(), "\n", null);
         }
@@ -181,11 +204,16 @@ public class JTextList extends JTextPane
         {
 
             String temp;
-            for(JTextArea txt : text)
+            for (int i = 0; i < text.size(); i++)
             {
-                if(txt.getDocument().equals(fb.getDocument()))
+                if (!check.get(i + 1).isSelected())
                     continue;
-                temp = new StringBuilder(txt.getText()).replace(offset,offset+length,"").toString();
+                JTextArea txt = text.get(i);
+                version.get(i).add(txt.getText());
+                if (txt.getDocument().equals(fb.getDocument()))
+                    continue;
+                temp = new StringBuilder(txt.getText()).replace(offset, offset + length, "").toString();
+
                 txt.setText(temp);
             }
             super.remove(fb, offset, length);
@@ -195,11 +223,17 @@ public class JTextList extends JTextPane
         public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException
         {
             String temp;
-            for(JTextArea txt : text)
+            for (int i = 0; i < text.size(); i++)
             {
-                if(txt.getDocument().equals(fb.getDocument()))
+                if (!check.get(i + 1).isSelected())
                     continue;
-                temp = new StringBuilder(txt.getText()).insert(offset,string).toString();
+                JTextArea txt = text.get(i);
+                version.get(i).add(txt.getText());
+                if (txt.getDocument().equals(fb.getDocument()))
+                    continue;
+
+                temp = new StringBuilder(txt.getText()).insert(offset, string).toString();
+
                 txt.setText(temp);
             }
             System.out.println(fb);
@@ -210,36 +244,19 @@ public class JTextList extends JTextPane
         public void replace(FilterBypass fb, int offset, int length, String with, AttributeSet attrs) throws BadLocationException
         {
             String temp;
-            for(JTextArea txt : text)
+            for (int i = 0; i < text.size(); i++)
             {
-                if(txt.getDocument().equals(fb.getDocument()))
+                if (!check.get(i + 1).isSelected())
                     continue;
-                temp = new StringBuilder(txt.getText()).replace(offset,offset+length,with).toString();
+                JTextArea txt = text.get(i);
+                version.get(i).add(txt.getText());
+                if (txt.getDocument().equals(fb.getDocument()))
+                    continue;
+                temp = new StringBuilder(txt.getText()).replace(offset, offset + length, with).toString();
+
                 txt.setText(temp);
             }
             super.replace(fb, offset, length, with, attrs);
-        }
-    }
-
-    class KeyboardListener implements KeyListener
-    {
-
-        @Override
-        public void keyTyped(KeyEvent e)
-        {
-
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e)
-        {
-
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e)
-        {
-
         }
     }
 
@@ -250,10 +267,47 @@ public class JTextList extends JTextPane
         public void focusGained(FocusEvent e)
         {
             JTextArea temp = (JTextArea) e.getComponent();
+            int index = text.indexOf(temp) + 1;
+
             temp.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            temp.setAlignmentY(0.78f);
             temp.setEditable(true);
             temp.getCaret().setVisible(true);
-            ((AbstractDocument) temp.getDocument()).setDocumentFilter(documentListen);
+            temp.getActionMap().put("undo", new AbstractAction()
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    System.out.println("wot");
+                    ((AbstractDocument) temp.getDocument()).setDocumentFilter(null);
+                    for (int i = 0; i < text.size(); i++)
+                    {
+                        if (version.get(i).size() > 0)
+                        {
+                            JTextArea tempText = text.get(i);
+                            ArrayList<String> tempVersion = version.get(i);
+                            int caretPos = tempText.getCaretPosition() - (tempText.getText().length() - tempVersion.get(tempVersion.size() - 1).length());
+                            tempText.setText(tempVersion.remove(tempVersion.size() - 1));
+                            if (tempText.hasFocus())
+                                tempText.setCaretPosition(caretPos);
+                        }
+                    }
+                    ((AbstractDocument) temp.getDocument()).setDocumentFilter(documentFilter);
+                }
+            });
+            temp.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "undo");
+
+            if (!check.get(0).isSelected() && !check.get(index).isSelected())
+            {
+                for (int i = 0; i < check.size(); i++)
+                {
+                    if (index == i)
+                        continue;
+                    check.get(i).setSelected(false);
+                }
+            }
+            check.get(index).setSelected(true);
+            ((AbstractDocument) temp.getDocument()).setDocumentFilter(documentFilter);
             for (JTextArea a : text)
             {
                 if (temp.equals(a))
@@ -263,14 +317,18 @@ public class JTextList extends JTextPane
                 ((AbstractDocument) a.getDocument()).setDocumentFilter(null);
                 CustomCaret caret = (CustomCaret) a.getCaret();
                 caret.deselect();
-
             }
         }
 
         @Override
         public void focusLost(FocusEvent e)
         {
-
+            JTextArea temp = (JTextArea) e.getComponent();
+            temp.setSelectionEnd(0);
+            temp.setBorder(null);
+            temp.setEditable(false);
+            temp.getActionMap().remove(KeyStroke.getKeyStroke("control Z"));
+            ((AbstractDocument) temp.getDocument()).setDocumentFilter(null);
         }
     }
 }
