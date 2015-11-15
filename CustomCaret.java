@@ -3,7 +3,7 @@ import javax.swing.text.DefaultCaret;
 /**
  * Created by abca2 on 9/11/2015.
  */
-public class CustomCaret extends DefaultCaret
+class CustomCaret extends DefaultCaret
 {
     @Override
     public void setSelectionVisible(boolean vis)
