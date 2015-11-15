@@ -49,17 +49,6 @@ class JTextList extends JTextPane
         nameList.get(index).setText(new StringBuilder(nameList.get(index).getText()).replace(startPos, endPos, string).toString());
     }
 
-    public void setText(int index, String string)
-    {
-        requestFocus();
-        nameList.get(index).setText(string);
-    }
-
-    public String getText(int index)
-    {
-        return nameList.get(index).getText();
-    }
-
     public JCheckBox getCheckBox(int index)
     {
         try

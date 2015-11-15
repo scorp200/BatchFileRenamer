@@ -42,7 +42,6 @@ class BatchRename extends JFrame
 
     private int posX;
     private int posY;
-
     private JTextList fileList;
     private File[] files;
     private String path = "";
