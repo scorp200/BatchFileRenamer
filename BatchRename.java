@@ -1,14 +1,11 @@
 import javax.swing.*;
-import javax.swing.border.Border;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.StyleConstants;
 import java.awt.*;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -20,7 +17,7 @@ import java.util.List;
 /**
  * Created by DogeWolf on 9/8/2015.
  */
-public class BatchRename extends JFrame
+class BatchRename extends JFrame
 {
     private static final int WIDTH = 700;
     private static final int HEIGHT = 340;
@@ -31,11 +28,11 @@ public class BatchRename extends JFrame
         {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         }
-        catch (Exception e)
+        catch (Exception ignored)
         {
         }
         JFrame frame = new BatchRename();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter()
         {
             public void windowClosing(WindowEvent e)
@@ -50,46 +47,75 @@ public class BatchRename extends JFrame
         frame.setVisible(true);
     }
 
-    private JCheckBox ignore;
-
-    private JButton apply;
-    private JButton open;
-    private JButton exit;
-    private JButton minimize;
-    private JButton numeric;
+    private int posX;
+    private int posY;
 
     private JTextList fileList;
-
     private File[] files;
-    private ArrayList<String> fileNames;
-
-    private Listener listener = new Listener();
     private String path = "";
-    private String[] ext;
-
-    private DropTarget target;
-    private FileDropTargetListener dropTargetListener;
-
-    private JLabel message;
 
     public BatchRename()
     {
         setLayout(null);
         setUndecorated(true);
+        addMouseListener(new MouseListener()
+                         {
+                             @Override
+                             public void mouseClicked(MouseEvent e)
+                             {
+                             }
 
-        exit = new JButton("X");
+                             @Override
+                             public void mousePressed(MouseEvent e)
+                             {
+                                 posX = e.getX();
+                                 posY = e.getY();
+                             }
+
+                             @Override
+                             public void mouseReleased(MouseEvent e)
+                             {
+                             }
+
+                             @Override
+                             public void mouseEntered(MouseEvent e)
+                             {
+                             }
+
+                             @Override
+                             public void mouseExited(MouseEvent e)
+                             {
+                             }
+                         }
+        );
+        addMouseMotionListener(new MouseMotionListener()
+        {
+            @Override
+            public void mouseDragged(MouseEvent e)
+            {
+                setLocation(e.getXOnScreen() - posX, e.getYOnScreen() - posY);
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e)
+            {
+
+            }
+        });
+        JButton exit = new JButton("X");
         exit.setSize(40, 20);
         exit.setLocation(WIDTH - exit.getWidth() - 4, 2);
+        Listener listener = new Listener();
         exit.addActionListener(listener);
         exit.setFocusable(false);
 
-        minimize = new JButton("_");
+        JButton minimize = new JButton("_");
         minimize.setSize(exit.getSize());
         minimize.setLocation(WIDTH - minimize.getWidth() - 8 - minimize.getWidth(), 2);
         minimize.addActionListener(listener);
         minimize.setFocusable(false);
 
-        open = new JButton();
+        JButton open = new JButton();
         open.setName("Open");
         open.setSize(28, 20);
         open.setLocation(36, 2);
@@ -97,7 +123,7 @@ public class BatchRename extends JFrame
         open.setIcon(UIManager.getIcon("Tree.openIcon"));
         open.setFocusable(false);
 
-        apply = new JButton();
+        JButton apply = new JButton();
         apply.setName("Apply");
         apply.setSize(open.getSize());
         apply.setLocation(4, 2);
@@ -105,13 +131,7 @@ public class BatchRename extends JFrame
         apply.setIcon(new ImageIcon(getClass().getResource("saveButton.png")));
         apply.setFocusable(false);
 
-        ignore = new JCheckBox("Ignore file Extension?");
-        ignore.setLocation(100, 2);
-        ignore.setSize(130, 20);
-        ignore.addActionListener(listener);
-        ignore.setFocusable(false);
-
-        numeric = new JButton();
+        JButton numeric = new JButton();
         numeric.setName("Numeric");
         numeric.setSize(open.getSize());
         numeric.setLocation(68, 2);
@@ -119,12 +139,12 @@ public class BatchRename extends JFrame
         numeric.setIcon(new ImageIcon(getClass().getResource("numericList.png")));
         numeric.setFocusable(false);
 
-        fileList = new JTextList(null, false);
+        fileList = new JTextList(listener);
         fileList.setSize(692, HEIGHT - 28);
         fileList.setLocation(4, 24);
         fileList.getDropTarget().setActive(false);
 
-        message = new JLabel("Drag and Drop a folder here");
+        JLabel message = new JLabel("Drag and Drop a folder here");
         message.setForeground(Color.GRAY);
         message.setFont(new Font(null, Font.PLAIN, 20));
 
@@ -138,8 +158,8 @@ public class BatchRename extends JFrame
         fileList.setCaretPosition(fileList.getText().length());
         fileList.insertComponent(message);
 
-        dropTargetListener = new FileDropTargetListener();
-        target = new DropTarget(fileScroll, dropTargetListener);
+        FileDropTargetListener dropTargetListener = new FileDropTargetListener();
+        DropTarget target = new DropTarget(fileScroll, dropTargetListener);
 
         add(fileScroll);
         add(open);
@@ -147,7 +167,6 @@ public class BatchRename extends JFrame
         add(minimize);
         add(apply);
         add(numeric);
-        add(ignore);
 
         requestFocus();
     }
@@ -165,27 +184,13 @@ public class BatchRename extends JFrame
     private void loadFiles(File[] files)
     {
         this.files = files;
-        if (fileNames == null)
-            fileNames = new ArrayList<>();
-        else
+        try
         {
-            fileList.getCheckBox(0).removeActionListener(listener);
-            fileNames.clear();
+            fileList.refreshList(filesToString(files));
         }
-        fileNames = filesToString(files);
-        fileList.newList(fileNames);
-        fileList.getCheckBox(0).addActionListener(listener);
-        ignore.setSelected(false);
-
-        ext = new String[files.length];
-        for (int i = 0; i < ext.length; i++)
+        catch (BadLocationException e)
         {
-            String temp = fileNames.get(i);
-            int index = temp.lastIndexOf(".");
-            if (index >= 0)
-                ext[i] = temp.substring(index, temp.length());
-            else
-                ext[i] = "";
+            showError(e);
         }
     }
 
@@ -197,28 +202,10 @@ public class BatchRename extends JFrame
             Path oldName = FileSystems.getDefault().getPath(f.getAbsolutePath());
             Files.move(oldName, oldName.resolveSibling("temp" + i));
             oldName = FileSystems.getDefault().getPath(path + "\\" + "temp" + i);
-            if (ignore.isSelected())
-                Files.move(oldName, oldName.resolveSibling(names.get(i) + ext[i]));
-            else
-                Files.move(oldName, oldName.resolveSibling(names.get(i)));
+            Files.move(oldName, oldName.resolveSibling(names.get(i)));
         }
         loadFiles(new File(path).listFiles());
         JOptionPane.showMessageDialog(this, "Your files were renamed");
-    }
-
-    private void removeExtension()
-    {
-
-        for (int i = 0; i < fileNames.size(); i++)
-        {
-            if (ext[i].equals(""))
-                continue;
-            String temp = fileList.getText(i);
-            if (ignore.isSelected())
-                fileList.setText(i, temp.substring(0, temp.lastIndexOf(".")));
-            else if (!ignore.isSelected())
-                fileList.setText(i, temp + ext[i]);
-        }
     }
 
     class Listener implements ActionListener
@@ -232,59 +219,52 @@ public class BatchRename extends JFrame
             if (e.getActionCommand().equals(""))
             {
                 String name = ((JButton) e.getSource()).getName();
-                if (name.equals("Open"))
+                switch (name)
                 {
-                    JFileChooser fileChooser = new JFileChooser(path);
-                    fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    fileChooser.showOpenDialog(getParent());
-                    if (fileChooser.getSelectedFile() == null)
-                        return;
-                    path = fileChooser.getSelectedFile().getPath();
-                    loadFiles(fileChooser.getSelectedFile().listFiles());
-                }
-                else if (name.equals("Apply"))
-                {
-                    int n = JOptionPane.showConfirmDialog(getParent(), "Would you like to rename the Files? this cannot be undone.", "Apply file rename", JOptionPane.YES_NO_OPTION);
-                    if (n == 0)
-                    {
+                    case "Open":
+                        JFileChooser fileChooser = new JFileChooser(path);
+                        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                        fileChooser.showOpenDialog(getParent());
+                        if (fileChooser.getSelectedFile() == null)
+                            return;
+                        path = fileChooser.getSelectedFile().getPath();
+                        loadFiles(fileChooser.getSelectedFile().listFiles());
+                        break;
+                    case "Apply":
+                        int n = JOptionPane.showConfirmDialog(getParent(), "Would you like to rename the Files? this cannot be undone.", "Apply file rename", JOptionPane.YES_NO_OPTION);
+                        if (n == 0)
+                        {
+                            try
+                            {
+                                processApply(fileList.getList());
+                            }
+                            catch (IOException e1)
+                            {
+                                showError(e1);
+                            }
+                        }
+                        break;
+                    case "Numeric":
+                        int start;
+                        int startPos = fileList.getSelectionStart();
+                        int endPos = fileList.getSelectionEnd();
                         try
                         {
-                            processApply(fileList.getList());
+                            start = Integer.parseInt(fileList.getSelectedText());
                         }
-                        catch (IOException e1)
+                        catch (NumberFormatException e1)
                         {
-                            showError(e1);
+                            start = -1;
                         }
-                    }
-                }
-                else if (name.equals("Numeric"))
-                {
-                    int start;
-                    int startPos = fileList.getSelectionStart();
-                    int endPos = fileList.getSelectionEnd();
-                    try
-                    {
-                        start = Integer.parseInt(fileList.getSelectedText());
-                    }
-                    catch (NumberFormatException e1)
-                    {
-                        start = -1;
-                    }
-                    if (start >= 0)
-                    {
-                        for (int i = 0; i < fileNames.size(); i++)
+                        if (start >= 0)
                         {
-                            fileList.replace(i,""+start+i,startPos,endPos);
+                            for (int i = 0; i < fileList.length(); i++)
+                            {
+                                fileList.replace(i, (((start + i) >= 10) ? "" : "0") + (start + i), startPos, endPos);
+                            }
                         }
-                    }
-                    System.out.println(start);
+                        break;
                 }
-            }
-            if (files == null)
-                return;
-            else if (e.getActionCommand().equals("Ignore file Extension?"))
-            {
-                removeExtension();
             }
             else if (e.getActionCommand().equals("checkAll"))
             {
@@ -350,7 +330,6 @@ public class BatchRename extends JFrame
         {
             fileList.setTextAlignment(StyleConstants.ALIGN_LEFT);
             event.acceptDrop(DnDConstants.ACTION_COPY);
-            ;
             Transferable transferable = event.getTransferable();
             try
             {
