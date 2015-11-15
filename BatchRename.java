@@ -33,13 +33,6 @@ class BatchRename extends JFrame
         }
         JFrame frame = new BatchRename();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
-                System.exit(0);
-            }
-        });
         frame.setTitle("Batch File Rename");
         frame.setSize(WIDTH, HEIGHT);
         frame.setLocationRelativeTo(null);
