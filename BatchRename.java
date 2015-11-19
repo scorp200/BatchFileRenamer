@@ -45,6 +45,7 @@ class BatchRename extends JFrame
     private JTextList fileList;
     private File[] files;
     private String path = "";
+    private JLabel title;
 
     public BatchRename()
     {
@@ -131,14 +132,14 @@ class BatchRename extends JFrame
         numeric.setIcon(new ImageIcon(getClass().getResource("numericList.png")));
         numeric.setFocusable(false);
 
+        title = new JLabel("Open a folder");
+        title.setSize(title.getText().length()*6,20);
+        title.setLocation(WIDTH / 2 - title.getWidth() / 2, 2);
+
         fileList = new JTextList(listener);
         fileList.setSize(692, HEIGHT - 28);
         fileList.setLocation(4, 24);
         fileList.getDropTarget().setActive(false);
-
-        JLabel message = new JLabel("Drag and Drop a folder here");
-        message.setForeground(Color.GRAY);
-        message.setFont(new Font(null, Font.PLAIN, 20));
 
         JScrollPane fileScroll = new JScrollPane(fileList);
         fileScroll.setSize(fileList.getSize());
@@ -146,9 +147,9 @@ class BatchRename extends JFrame
 
 
         fileList.setTextAlignment(StyleConstants.ALIGN_CENTER);
-        fileList.setText("\n\n\n\n\n\n");
-        fileList.setCaretPosition(fileList.getText().length());
-        fileList.insertComponent(message);
+        fileList.setText("\n\n\n\n\nDrag and Drop a folder here");
+        fileList.setForeground(Color.GRAY);
+        fileList.setFont(new Font(null, Font.PLAIN, 20));
 
         FileDropTargetListener dropTargetListener = new FileDropTargetListener();
         DropTarget target = new DropTarget(fileScroll, dropTargetListener);
@@ -159,6 +160,7 @@ class BatchRename extends JFrame
         add(minimize);
         add(apply);
         add(numeric);
+        add(title);
 
         requestFocus();
     }
@@ -326,7 +328,11 @@ class BatchRename extends JFrame
             try
             {
                 List list = (List) transferable.getTransferData(transferable.getTransferDataFlavors()[0]);
+
                 path = list.get(0).toString();
+                title.setText(path);
+                title.setSize(title.getText().length()*6,20);
+                title.setLocation(WIDTH / 2 - title.getWidth() / 2, 2);
                 loadFiles(new File(list.get(0).toString()).listFiles());
             }
             catch (UnsupportedFlavorException | IOException e)

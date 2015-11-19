@@ -14,17 +14,17 @@ class JTextList extends JTextPane
 {
     private StyledDocument doc;
     private ArrayList<JCheckBox> check;
-    private ArrayList<JTextArea> nameList;
-    private ArrayList<JTextArea> ext;
+    private ArrayList<JTextPane> nameList;
+    private ArrayList<JTextPane> ext;
     private Listener listener;
     private DocumentFilter documentFilter;
     private ArrayList<ArrayList<String>> version;
     private ActionListener actionListener;
+    private Font font;
 
     public JTextList(ActionListener actionListener)
     {
-        Font font = new Font(Font.SANS_SERIF, 0, 15);
-        setFont(font);
+        font = new Font(Font.SANS_SERIF, 0, 15);
         setEditable(false);
         this.actionListener = actionListener;
         doc = this.getStyledDocument();
@@ -44,7 +44,7 @@ class JTextList extends JTextPane
     public void replace(int index, String string, int startPos, int endPos)
     {
         requestFocus();
-        if(Math.abs(startPos-endPos)<2)
+        if (Math.abs(startPos - endPos) < 2)
             return;
         nameList.get(index).setText(new StringBuilder(nameList.get(index).getText()).replace(startPos, endPos, string).toString());
     }
@@ -64,7 +64,7 @@ class JTextList extends JTextPane
     @Override
     public int getSelectionStart()
     {
-        for (JTextArea a : nameList)
+        for (JTextPane a : nameList)
         {
             if (a.getCaret().isSelectionVisible())
                 return a.getSelectionStart();
@@ -75,7 +75,7 @@ class JTextList extends JTextPane
     @Override
     public int getSelectionEnd()
     {
-        for (JTextArea a : nameList)
+        for (JTextPane a : nameList)
         {
             if (a.getCaret().isSelectionVisible())
                 return a.getSelectionEnd();
@@ -86,7 +86,7 @@ class JTextList extends JTextPane
     @Override
     public String getSelectedText()
     {
-        for (JTextArea a : nameList)
+        for (JTextPane a : nameList)
         {
             if (a.getCaret().isSelectionVisible())
             {
@@ -106,19 +106,20 @@ class JTextList extends JTextPane
 
     public void refreshList(ArrayList<String> newList) throws BadLocationException
     {
-        //Clear lists if different size==============================================
+        setFont(font);
+        //Clear lists if smaller size==============================================
         doc.remove(0, doc.getLength());
-        if (newList.size() != nameList.size())
+        if (newList.size() < nameList.size())
         {
             if (check.size() > 0)
                 check.get(0).removeActionListener(actionListener);
-            for (JTextArea a : nameList)
+            for (JTextPane a : nameList)
             {
                 a.removeFocusListener(listener);
                 a.getActionMap().clear();
                 ((AbstractDocument) a.getDocument()).setDocumentFilter(null);
             }
-            for (JTextArea a : ext)
+            for (JTextPane a : ext)
                 a.removeFocusListener(listener);
             check.clear();
             nameList.clear();
@@ -128,7 +129,7 @@ class JTextList extends JTextPane
         for (int i = 0; i < newList.size() + 1; i++)
         {
             //Check Boxes============================================================
-            if (check.size() - 1 != newList.size())
+            if (i > check.size() - 1)
             {
                 if (i == 0)
                 {
@@ -149,33 +150,39 @@ class JTextList extends JTextPane
 
 
                 //File name
-                if (nameList.size() != newList.size())
+                if (i > nameList.size())
                 {
-                    JTextArea tempName = new JTextArea();
+                    JTextPane tempName = new JTextPane();
                     nameList.add(tempName);
                     version.add(new ArrayList<>());
                     tempName.setCaret(new CustomCaret());
                     tempName.addFocusListener(listener);
-                    tempName.setAlignmentY(0.78f);
+                    tempName.setAlignmentY(0.83f);
                     tempName.setEditable(false);
                     tempName.getDropTarget().setActive(false);
                     tempName.getDocument().putProperty("filterNewlines", true);
                     tempName.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                     tempName.setBorder(null);
+                    tempName.setFont(font);
                 }
                 insertComponent(nameList.get(i - 1));
                 //Extension
                 if (ext.size() != newList.size())
                 {
-                    JTextArea tempExt = new JTextArea();
+                    JTextPane tempExt = new JTextPane();
                     ext.add(tempExt);
                     tempExt.addFocusListener(listener);
-                    tempExt.setAlignmentY(0.78f);
+                    tempExt.setAlignmentY(0.83f);
                     tempExt.setEditable(false);
                     tempExt.getDropTarget().setActive(false);
                     tempExt.getDocument().putProperty("filterNewlines", true);
                     tempExt.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                     tempExt.setBorder(null);
+                    tempExt.setMaximumSize(new Dimension(10,20));
+                    SimpleAttributeSet set = new SimpleAttributeSet();
+                    StyleConstants.setAlignment(set, StyleConstants.ALIGN_RIGHT);
+                    tempExt.getStyledDocument().setParagraphAttributes(0, doc.getLength(), set, false);
+                    tempExt.setFont(font);
                 }
                 insertComponent(ext.get(i - 1));
                 String temp = newList.get(i - 1);
@@ -207,7 +214,7 @@ class JTextList extends JTextPane
             {
                 if (!check.get(i + 1).isSelected())
                     continue;
-                JTextArea txt = nameList.get(i);
+                JTextPane txt = nameList.get(i);
                 version.get(i).add(txt.getText());
                 if (txt.getDocument().equals(fb.getDocument()))
                     continue;
@@ -226,7 +233,7 @@ class JTextList extends JTextPane
             {
                 if (!check.get(i + 1).isSelected())
                     continue;
-                JTextArea txt = nameList.get(i);
+                JTextPane txt = nameList.get(i);
                 version.get(i).add(txt.getText());
                 if (txt.getDocument().equals(fb.getDocument()))
                     continue;
@@ -247,7 +254,7 @@ class JTextList extends JTextPane
             {
                 if (!check.get(i + 1).isSelected())
                     continue;
-                JTextArea txt = nameList.get(i);
+                JTextPane txt = nameList.get(i);
                 version.get(i).add(txt.getText());
                 if (txt.getDocument().equals(fb.getDocument()))
                     continue;
@@ -265,7 +272,7 @@ class JTextList extends JTextPane
         @Override
         public void focusGained(FocusEvent e)
         {
-            JTextArea temp = (JTextArea) e.getComponent();
+            JTextPane temp = (JTextPane) e.getComponent();
             int index = nameList.indexOf(temp) + 1;
             temp.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             temp.setEditable(true);
@@ -294,7 +301,7 @@ class JTextList extends JTextPane
                     {
                         if (version.get(i).size() > 0)
                         {
-                            JTextArea tempText = nameList.get(i);
+                            JTextPane tempText = nameList.get(i);
                             ArrayList<String> tempVersion = version.get(i);
                             int caretPos = tempText.getCaretPosition() - (tempText.getText().length() - tempVersion.get(tempVersion.size() - 1).length());
                             tempText.setText(tempVersion.remove(tempVersion.size() - 1));
@@ -312,8 +319,9 @@ class JTextList extends JTextPane
         @Override
         public void focusLost(FocusEvent e)
         {
-            JTextArea temp = (JTextArea) e.getComponent();
-            ((CustomCaret) temp.getCaret()).deselect();
+            JTextPane temp = (JTextPane) e.getComponent();
+            if (ext.indexOf(temp) < 0)
+                ((CustomCaret) temp.getCaret()).deselect();
             temp.setSelectionEnd(0);
             temp.setBorder(null);
             temp.setEditable(false);
