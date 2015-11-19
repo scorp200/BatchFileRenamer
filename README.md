@@ -14,6 +14,7 @@ If you made a mistake press CTRL+Z
 
 If you have a single or multiple episodes that need to be edited separately from other,
 uncheck "check all" and select the episodes you wish to edit.
+
 ![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/4.PNG?raw=true "")
 
 If you wish to add episode numbers in order of the loaded files add 00,
