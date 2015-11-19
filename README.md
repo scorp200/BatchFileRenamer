@@ -1,18 +1,22 @@
 # batchFileRenamer
 I made this app when I got tired renaming my shows with tons of episodes.
 
-Download Jar:
+Instructions:
+Drag a folder containing the episodes of your show to the app.
+![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/1.PNG?raw=true "")
 
-ver 0.1.0.
+Select an episode and start editing
+![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/2.PNG?raw=true "")
 
--Brand new UI.
+As you edit the episode the changes will occur accross all that are selected
+if you made a mistake press CTRL+Z
+![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/3.PNG?raw=true "")
 
--Changed how user rename files.
+If you have a single or multiple episodes that need to be edited saperetly from other, uncheck "check all" and select the episodes you wish to edit.
+![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/4.PNG?raw=true "")
 
--Added numerical button, rename files numerically.
+If you wish to add episode numbers in order of the loaded files add 00, select it and then press the numerical button
+![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/5.PNG?raw=true "")
 
-https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/BatchRename%200.1.0.jar
-
-ver 0.0.5.
-
-https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/BatchRename%200.0.5.jar
+Then press the save button and then Okay, and your files will be renamed.
+![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/6.PNG?raw=true "")
