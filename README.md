@@ -8,12 +8,12 @@ Drag a folder containing the episodes of your show to the app.
 Select an episode and start editing
 ![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/2.PNG?raw=true "")
 
-As you edit the episode the changes will occur accross all that are selected
-if you made a mistake press CTRL+Z
+As you edit the episode the changes will occur across all that are selected. 
+If you made a mistake press CTRL+Z
 ![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/3.PNG?raw=true "")
 
-If you have a single or multiple episodes that need to be edited saperetly from other, uncheck "check all" and select the episodes you wish to edit.
-
+If you have a single or multiple episodes that need to be edited separately from other,
+uncheck "check all" and select the episodes you wish to edit.
 ![Alt text](https://dl.dropboxusercontent.com/u/1417773/File%20Renamer/4.PNG?raw=true "")
 
 If you wish to add episode numbers in order of the loaded files add 00,
